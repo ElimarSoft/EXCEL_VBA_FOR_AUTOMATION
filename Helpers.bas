@@ -137,5 +137,15 @@ End Sub
 Private Sub SetText(h1 As Long, Text As String)
     apiSendMessage h1, WM_SETTEXT, 0, ByVal Text
 End Sub
+
+'Send Key code 
+Private Sub SendKey(h1 As Long, KeyCode As Integer)
+    apiSendMessage h1,WM_KEYDOWN, KeyCode, 0
+    apiSendMessage h1,WM_KEYUP, KeyCode, 0
+End Sub
+
+        
+        
+        
         
       
