@@ -128,5 +128,14 @@ Private Function GetListBox(h1 As Long) As String()
 
 End Function
 
-      
+ 'Click a Button
+Private Sub Click(h1 As Long)
+    apiSendMessage h1, BM_CLICK, 0, 0
+End Sub
+
+'Set Text
+Private Sub SetText(h1 As Long, Text As String)
+    apiSendMessage h1, WM_SETTEXT, 0, ByVal Text
+End Sub
+        
       
