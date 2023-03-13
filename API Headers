@@ -1,0 +1,189 @@
+Option Explicit
+Option Base 1
+Private Declare PtrSafe Function apiFindWindow Lib "user32" Alias "FindWindowA" (ByVal lpClassName As String, ByVal lpWindowName As String) As Long
+Private Declare PtrSafe Function apiFindWindowEx Lib "user32" Alias "FindWindowExA" (ByVal hWnd1 As Long, ByVal hWnd2 As Long, ByVal lpsz1 As String, ByVal lpsz2 As String) As Long
+Private Declare PtrSafe Function apiSendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Private Declare PtrSafe Function apiPostMessage Lib "user32" Alias "PostMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare PtrSafe Function apiSetForegroundWindow Lib "user32" Alias "SetForegroundWindow" (ByVal hwnd As Long) As Long
+Private Declare PtrSafe Function apiSendDlgItemMessage Lib "user32" Alias "SendDlgItemMessageA" (ByVal hwnd As Long, ByVal nIDDlgItem As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Private Declare PtrSafe Function apiGetWindowText Lib "user32" Alias "GetWindowTextA" (ByVal hwnd As Long, ByVal szWindowText As String, ByVal lLength As Long) As Long
+Private Declare PtrSafe Function apiSetWindowText Lib "user32" Alias "SetWindowTextA" (ByVal hwnd As Long, ByVal lpString As String) As Long
+Private Declare PtrSafe Sub apiSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+Private Declare PtrSafe Function apiGetWindowRect Lib "user32" Alias "GetWindowRect" (ByVal hwnd As Long, lpRect As winRect) As Long
+'Declare mouse events
+Private Declare PtrSafe Function apiSetCursorPos Lib "user32" Alias "SetCursorPos" (ByVal x As Long, ByVal y As Long) As Long
+Private Declare PtrSafe Sub apiMouseEvent Lib "user32" Alias "mouse_event" (ByVal dwFlags As Long, ByVal dx As Long, ByVal dy As Long, ByVal cButtons As Long, ByVal dwExtraInfo As Long)
+'Graphics API
+Private Declare PtrSafe Function GetPixel Lib "gdi32" (ByVal hdc As Long, ByVal x As Long, ByVal y As Long) As Long
+Private Declare PtrSafe Function GetCursorPos Lib "user32" (ByRef lpPoint As POINT) As LongPtr
+Private Declare PtrSafe Function SetCursorPos Lib "user32" (ByRef lpPoint As POINT) As LongPtr
+Private Declare PtrSafe Function GetWindowDC Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare PtrSafe Function GetWindowRect Lib "user32" (ByVal hwnd As Long, lpRect As winRect) As Long
+Private Declare PtrSafe Function SetCapture Lib "user32" (ByVal hwnd As Long) As Long
+
+Const WM_KEYFIRST = &H100
+Const WM_KEYDOWN = &H100
+Const WM_KEYUP = &H101
+Const WM_CHAR = &H102
+Const WM_DEADCHAR = &H103
+Const WM_SYSKEYDOWN = &H104
+Const WM_SYSKEYUP = &H105
+Const WM_SYSCHAR = &H106
+Const WM_SYSDEADCHAR = &H107
+
+Const VK_SPACE = &H20
+Const VK_PRIOR = &H21
+Const VK_NEXT = &H22
+Const VK_END = &H23
+Const VK_HOME = &H24
+Const VK_LEFT = &H25
+Const VK_UP = &H26
+Const VK_RIGHT = &H27
+Const VK_DOWN = &H28
+Const VK_SELECT = &H29
+Const VK_PRINT = &H2A
+Const VK_EXECUTE = &H2B
+Const VK_SNAPSHOT = &H2C
+Const VK_INSERT = &H2D
+Const VK_DELETE = &H2E
+Const VK_HELP = &H2F
+
+Const VK_SHIFT = &H10
+Const VK_CONTROL = &H11
+Const VK_MENU = &H12
+Const VK_PAUSE = &H13
+Const VK_CAPITAL = &H14
+
+Const VK_LSHIFT = &HA0
+Const VK_RSHIFT = &HA1
+Const VK_LCONTROL = &HA2
+Const VK_RCONTROL = &HA3
+Const VK_LMENU = &HA4
+Const VK_RMENU = &HA5
+
+Const KF_EXTENDED = &H100
+Const KF_DLGMODE = &H800
+Const KF_MENUMODE = &H1000
+Const KF_ALTDOWN = &H2000
+Const KF_REPEAT = &H4000
+Const KF_UP = &H8000
+
+Private Const MOUSEEVENTF_MOVE = &H1          '/* mouse move */
+Private Const MOUSEEVENTF_LEFTDOWN = &H2      '/* left button down */
+Private Const MOUSEEVENTF_LEFTUP = &H4        '/* left button up */
+Private Const MOUSEEVENTF_RIGHTDOWN = &H8     '/* right button down */
+Private Const MOUSEEVENTF_RIGHTUP = &H10      '/* right button up */
+Private Const MOUSEEVENTF_MIDDLEDOWN = &H20   '/* middle button down */
+Private Const MOUSEEVENTF_MIDDLEUP = &H40     '/* middle button up */
+Private Const MOUSEEVENTF_XDOWN = &H80        '/* x button down */
+Private Const MOUSEEVENTF_XUP = &H100         '/* x button down */
+Private Const MOUSEEVENTF_WHEEL = &H800       '/* wheel button rolled */
+Private Const MOUSEEVENTF_VIRTUALDESK = &H4000 '/* map to entire virtual desktop */
+Private Const MOUSEEVENTF_ABSOLUTE = &H8000    '/* absolute move */
+
+Private Type winRect     'used by apiMoveWindow
+    Left As Long
+    Top As Long
+    Right As Long
+    Bottom As Long
+End Type
+
+Private Type POINT
+    x As Long
+    y As Long
+End Type
+
+Const WM_SETTEXT = &HC
+Const WM_GETTEXT = &HD
+Const WM_GETTEXTLENGTH = &HE
+
+Const KEYEVENTF_EXTENDEDKEY = 1
+Const KEYEVENTF_KEYUP = 2
+Const BM_CLICK = &HF5
+
+Const CB_GETEDITSEL = &H140
+Const CB_LIMITTEXT = &H141
+Const CB_SETEDITSEL = &H142
+Const CB_ADDSTRING = &H143
+Const CB_DELETESTRING = &H144
+Const CB_DIR = &H145
+Const CB_GETCOUNT = &H146
+Const CB_GETCURSEL = &H147
+Const CB_GETLBTEXT = &H148
+Const CB_GETLBTEXTLEN = &H149
+Const CB_INSERTSTRING = &H14A
+Const CB_RESETCONTENT = &H14B
+Const CB_FINDSTRING = &H14C
+Const CB_SELECTSTRING = &H14D
+Const CB_SETCURSEL = &H14E
+Const CB_SHOWDROPDOWN = &H14F
+Const CB_GETITEMDATA = &H150
+Const CB_SETITEMDATA = &H151
+Const CB_GETDROPPEDCONTROLRECT = &H152
+Const CB_SETITEMHEIGHT = &H153
+Const CB_GETITEMHEIGHT = &H154
+Const CB_SETEXTENDEDUI = &H155
+Const CB_GETEXTENDEDUI = &H156
+Const CB_GETDROPPEDSTATE = &H157
+Const CB_FINDSTRINGEXACT = &H158
+Const CB_SETLOCALE = &H159
+Const CB_GETLOCALE = &H15A
+
+Const WM_MOUSEFIRST = &H200
+Const WM_MOUSEMOVE = &H200
+Const WM_LBUTTONDOWN = &H201
+Const WM_LBUTTONUP = &H202
+Const WM_LBUTTONDBLCLK = &H203
+Const WM_RBUTTONDOWN = &H204
+Const WM_RBUTTONUP = &H205
+Const WM_RBUTTONDBLCLK = &H206
+Const WM_MBUTTONDOWN = &H207
+Const WM_MBUTTONUP = &H208
+Const WM_MBUTTONDBLCLK = &H209
+
+Const MK_LBUTTON = &H1
+Const MK_RBUTTON = &H2
+Const MK_SHIFT = &H4
+Const MK_CONTROL = &H8
+Const MK_MBUTTON = &H10
+Const MK_XBUTTON1 = &H20
+Const MK_XBUTTON2 = &H40
+
+Const LB_ADDSTRING = &H180
+Const LB_INSERTSTRING = &H181
+Const LB_DELETESTRING = &H182
+Const LB_SELITEMRANGEEX = &H183
+Const LB_RESETCONTENT = &H184
+Const LB_SETSEL = &H185
+Const LB_SETCURSEL = &H186
+Const LB_GETSEL = &H187
+Const LB_GETCURSEL = &H188
+Const LB_GETTEXT = &H189
+Const LB_GETTEXTLEN = &H18A
+Const LB_GETCOUNT = &H18B
+Const LB_SELECTSTRING = &H18C
+Const LB_DIR = &H18D
+Const LB_GETTOPINDEX = &H18E
+Const LB_FINDSTRING = &H18F
+Const LB_GETSELCOUNT = &H190
+Const LB_GETSELITEMS = &H191
+Const LB_SETTABSTOPS = &H192
+Const LB_GETHORIZONTALEXTENT = &H193
+Const LB_SETHORIZONTALEXTENT = &H194
+Const LB_SETCOLUMNWIDTH = &H195
+Const LB_ADDFILE = &H196
+Const LB_SETTOPINDEX = &H197
+Const LB_GETITEMRECT = &H198
+Const LB_GETITEMDATA = &H199
+Const LB_SETITEMDATA = &H19A
+Const LB_SELITEMRANGE = &H19B
+Const LB_SETANCHORINDEX = &H19C
+Const LB_GETANCHORINDEX = &H19D
+Const LB_SETCARETINDEX = &H19E
+Const LB_GETCARETINDEX = &H19F
+Const LB_SETITEMHEIGHT = &H1A0
+Const LB_GETITEMHEIGHT = &H1A1
+Const LB_FINDSTRINGEXACT = &H1A2
+Const LB_SETLOCALE = &H1A5
+Const LB_GETLOCALE = &H1A6
+Const LB_SETCOUNT = &H1A7
