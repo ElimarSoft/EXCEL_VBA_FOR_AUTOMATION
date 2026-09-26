@@ -14,3 +14,14 @@ Find again your objects handle everytime you open the corresponding window.
 
 Then use the helper functions to read and write text, activate buttons or checkboxes.
 
+# DISCLAIMER
+
+This VBA code is provided "AS IS" without any warranty.
+The author assumes no responsibility for any errors, data loss,
+file corruption, business interruption, or any other damages
+resulting from the use of this code.
+Users are responsible for testing and validating the code before
+using it in production environments.
+Use at your own risk.
+
+Copyright © 2026 elimar.com
